@@ -3,16 +3,30 @@
 import ssl
 import nltk
 
+class UnigramChunker(nltk.ChunkParserI):
+    def __init__(self, train_sentences):
+        train_data = [[(pos, chunk)
+                       for _, pos, chunk in nltk.chunk.tree2conlltags(sentence)]
+                      for sentence in train_sentences]
+        self.tagger = nltk.UnigramTagger(train_data)
+
+
+    def parser(self, sentence):
+        pos_tags = [pos for (word, pos) in sentence]
+        pos_chunk_tags = self.tagger.tag(pos_tags)
+        chunk_tags = [chunk for (pos, chunk) in pos_chunk_tags]
+        conll_tags = [(word, pos, chunk)
+                      for ((word, pos), chunk) in zip(sentence, chunk_tags)]
+        return nltk.chunk.conlltags2tree(conll_tags)
+
+
 def main():
     download_resources()
-    #noun_phrase = 'NP: {<DT|PP\$>?<JJ.*>*<NN.*>+}'
-    noun_phrase = 'NP: { < [CDJNP]. * > +}'
-    #verb_to_verb = 'VtV: {<V.*><TO><V.*>}'
-    print(evaluate_chunker(get_chunker(noun_phrase)))
 
 
 def evaluate_chunker(chunker):
-    evaluation_data = nltk.corpus.conll2000.chunked_sents(chunk_types=['NP'])
+    evaluation_data = nltk.corpus.conll2000.chunked_sents('test.txt',
+                                                          chunk_types=['NP'])
     return chunker.evaluate(evaluation_data)
 
 
