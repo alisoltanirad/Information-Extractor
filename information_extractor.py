@@ -6,13 +6,22 @@ import nltk
 def main():
     download_resources()
     #noun_phrase = 'NP: {<DT|PP\$>?<JJ.*>*<NN.*>+}'
+    noun_phrase = 'NP: { < [CDJNP]. * > +}'
     #verb_to_verb = 'VtV: {<V.*><TO><V.*>}'
+    print(evaluate_chunker(get_chunker(noun_phrase)))
 
 
-def chunk(sentence, chunk_grammar):
-    chunk_parser = nltk.RegexpParser(chunk_grammar)
-    parsed_sentence = chunk_parser.parse(sentence)
-    return parsed_sentence
+def evaluate_chunker(chunker):
+    evaluation_data = nltk.corpus.conll2000.chunked_sents(chunk_types=['NP'])
+    return chunker.evaluate(evaluation_data)
+
+
+def chunk(chunker, sentence):
+    return chunker.parse(sentence)
+
+
+def get_chunker(chunk_grammar):
+    return nltk.RegexpParser(chunk_grammar)
 
 
 def preprocess_text(document):
@@ -25,6 +34,7 @@ def preprocess_text(document):
 def download_resources():
     ssl._create_default_https_context = ssl._create_unverified_context
     nltk.download('averaged_perceptron_tagger')
+    nltk.download('conll2000')
     nltk.download('brown')
 
 
