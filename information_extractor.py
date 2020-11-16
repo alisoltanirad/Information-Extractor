@@ -7,8 +7,8 @@ class BigramChunker(nltk.ChunkParserI):
 
     def __init__(self, train_sentences):
         train_data = [[(pos, chunk)
-                       for _, pos, chunk in nltk.chunk.tree2conlltags(sentence)]
-                      for sentence in train_sentences]
+                       for _, pos, chunk in nltk.chunk.tree2conlltags(sent)]
+                      for sent in train_sentences]
         self.tagger = nltk.BigramTagger(train_data)
 
 
@@ -19,6 +19,26 @@ class BigramChunker(nltk.ChunkParserI):
         conll_tags = [(word, pos, chunk)
                       for ((word, pos), chunk) in zip(sentence, chunk_tags)]
         return nltk.chunk.conlltags2tree(conll_tags)
+
+
+class ConsecutiveChunker(nltk.ChunkParserI):
+
+    def __init__(self, train_sentences):
+        train_data = [[((word, pos), chunk)
+                       for word, pos, chunk in nltk.chunk.tree2conlltags(sent)]
+                      for sent in train_sentences]
+        self.tagger = ConsecutiveTagger(train_data)
+
+
+    def parse(self, sentence):
+        tagged_sentence = self.tagger.tag(sentence)
+        conll_tags = [(word, pos, chunk)
+                      for ((word, pos), chunk) in tagged_sentence]
+        return nltk.chunk.conlltags2tree(conll_tags)
+
+
+    def parse(self, sentence):
+        pass
 
 
 def main():
