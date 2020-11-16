@@ -37,8 +37,28 @@ class ConsecutiveChunker(nltk.ChunkParserI):
         return nltk.chunk.conlltags2tree(conll_tags)
 
 
-    def parse(self, sentence):
-        pass
+class ConsecutiveTagger(nltk.TaggerI):
+
+    def __init__(self, train_data):
+        train_set = []
+        for tagged_sentence in train_data:
+            sentence = nltk.tag.untag(tagged_sentence)
+            history = []
+            for i, (word, tag) in enumerate(tagged_sentence):
+                features = self.__get_features(sentence, i, history)
+                train_set.append((features, tag))
+                history.append(tag)
+        self.classifier = nltk.MaxentClassifier.train(
+            train_set, algorithm='megam', trace=0)
+
+
+    def tag(self, sentence):
+        history = []
+        for i, word in enumerate(sentence):
+            features = self.__get_features(sentence, i, history)
+            tag = self.classifier.classify(features)
+            history.append(tag)
+        return zip(sentence, history)
 
 
 def main():
