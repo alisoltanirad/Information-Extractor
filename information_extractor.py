@@ -45,20 +45,55 @@ class ConsecutiveTagger(nltk.TaggerI):
             sentence = nltk.tag.untag(tagged_sentence)
             history = []
             for i, (word, tag) in enumerate(tagged_sentence):
-                features = self.__get_features(sentence, i, history)
+                features = self.__get_features(sentence, i)
                 train_set.append((features, tag))
                 history.append(tag)
-        self.classifier = nltk.MaxentClassifier.train(
-            train_set, algorithm='megam', trace=0)
+        self.classifier = nltk.NaiveBayesClassifier.train(train_set)
 
 
     def tag(self, sentence):
         history = []
         for i, word in enumerate(sentence):
-            features = self.__get_features(sentence, i, history)
+            features = self.__get_features(sentence, i)
             tag = self.classifier.classify(features)
             history.append(tag)
         return zip(sentence, history)
+
+
+    def __get_features(self, sentence, i):
+        features = {}
+
+        word, pos = sentence[i]
+        features['word'] = word
+        features['pos'] = pos
+
+        if i == 0:
+            previous_word, previous_pos = '_', '<START>'
+        else:
+            previous_word, previous_pos = sentence[i-1]
+        features['previous_pos'] = previous_pos
+
+        if i == len(sentence)-1:
+            next_word, next_pos = '_', '<END>'
+        else:
+            next_word, next_pos = sentence[i+1]
+        features['next_pos'] = next_pos
+
+        features['previous_pos+pos'] = '%s+%s' % (previous_pos, pos)
+        features['pos+next_pos'] = '%s+%s' % (pos, next_pos)
+        features['tags_since_dt'] = self.__get_tags_since_dt(sentence, i)
+
+        return features
+
+
+    def __get_tags_since_dt(self, sentence, i):
+        tags = set()
+        for word, pos in sentence[:i]:
+            if pos == 'DT':
+                tags = set()
+            else:
+                tags.add(pos)
+        return '+'.join(sorted(tags))
 
 
 def main():
@@ -68,7 +103,7 @@ def main():
 
 def print_evaluation_scores():
     train_set, test_set = get_data_set()
-    print(BigramChunker(train_set).evaluate(test_set))
+    print(ConsecutiveChunker(train_set).evaluate(test_set))
 
 
 def get_data_set():
@@ -102,7 +137,6 @@ def download_resources():
     ssl._create_default_https_context = ssl._create_unverified_context
     nltk.download('averaged_perceptron_tagger')
     nltk.download('conll2000')
-    nltk.download('brown')
 
 
 if __name__ == '__main__':
