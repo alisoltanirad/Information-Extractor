@@ -117,6 +117,16 @@ class RegexpChunker():
         return grammar
 
 
+class EntityRecognizer():
+
+    def __init__(self):
+        self.parser = nltk.ne_chunk
+
+
+    def parse(self, sentence):
+        return self.parser(sentence)
+
+
 def main():
     download_resources()
 
