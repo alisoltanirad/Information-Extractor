@@ -96,9 +96,28 @@ class ConsecutiveTagger(nltk.TaggerI):
         return '+'.join(sorted(tags))
 
 
+class RegexpChunker():
+
+    def __init__(self):
+        self.parser = nltk.RegexpParser(self.__get_chunk_grammar(), loop=2)
+
+
+    def parse(self, sentence):
+        return self.parser.parse(sentence)
+
+
+    def __get_chunk_grammar(self):
+        grammar = r'''
+        NP: {<DT|JJ|NN.*>+}           # Noun Phrase
+        PP: {<IN><NP>}                # Prepositional Phrase
+        VP: {<VB.*><NP|PP|CLAUSE>+$}  # Verb Phrase
+        CLAUSE: {<NP><VP>}            # Sentence
+        '''
+        return grammar
+
+
 def main():
     download_resources()
-    print_evaluation_scores()
 
 
 def print_evaluation_scores():
@@ -110,20 +129,6 @@ def get_data_set():
     train = nltk.corpus.conll2000.chunked_sents('train.txt', chunk_types=['NP'])
     test = nltk.corpus.conll2000.chunked_sents('test.txt', chunk_types=['NP'])
     return train, test
-
-
-def evaluate_re_chunker(chunker):
-    evaluation_data = nltk.corpus.conll2000.chunked_sents('test.txt',
-                                                          chunk_types=['NP'])
-    return chunker.evaluate(evaluation_data)
-
-
-def re_chunk(chunker, sentence):
-    return chunker.parse(sentence)
-
-
-def get_re_chunker(chunk_grammar):
-    return nltk.RegexpParser(chunk_grammar)
 
 
 def preprocess_text(document):
