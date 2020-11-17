@@ -100,6 +100,7 @@ class RegexpChunker():
 
     def __init__(self):
         self.parser = nltk.RegexpParser(self.__get_chunk_grammar(), loop=2)
+        self.evaluate = self.parser.evaluate
 
 
     def parse(self, sentence):
@@ -118,11 +119,6 @@ class RegexpChunker():
 
 def main():
     download_resources()
-
-
-def print_evaluation_scores():
-    train_set, test_set = get_data_set()
-    print(ConsecutiveChunker(train_set).evaluate(test_set))
 
 
 def get_data_set():
