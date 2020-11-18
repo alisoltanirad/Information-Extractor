@@ -3,13 +3,33 @@
 import ssl
 import nltk
 
+
+class TextPreprocessor():
+    sent_tokenize = nltk.sent_tokenize
+    word_tokenize = nltk.word_tokenize
+    pos_tag = nltk.pos_tag
+
+    def __init__(self, text):
+        self.text = text
+
+
+    def tag(self):
+        tokenized_text = self.tokenize(self.text)
+        return self.pos_tag(tokenized_text)
+
+
+    def tokenize(self):
+        sentences = self.sent_tokenize(self.text)
+        return self.word_tokenize(sentences)
+
+
 class BigramChunker(nltk.ChunkParserI):
 
     def __init__(self, train_sentences):
-        train_data = [[(pos, chunk)
+        self.__train_data = [[(pos, chunk)
                        for _, pos, chunk in nltk.chunk.tree2conlltags(sent)]
                       for sent in train_sentences]
-        self.tagger = nltk.BigramTagger(train_data)
+        self.tagger = nltk.BigramTagger(self.__train_data)
 
 
     def parse(self, sentence):
@@ -24,10 +44,10 @@ class BigramChunker(nltk.ChunkParserI):
 class ConsecutiveChunker(nltk.ChunkParserI):
 
     def __init__(self, train_sentences):
-        train_data = [[((word, pos), chunk)
+        self.__train_data = [[((word, pos), chunk)
                        for word, pos, chunk in nltk.chunk.tree2conlltags(sent)]
                       for sent in train_sentences]
-        self.tagger = ConsecutiveTagger(train_data)
+        self.tagger = ConsecutiveTagger(self.__train_data)
 
 
     def parse(self, sentence):
@@ -40,15 +60,15 @@ class ConsecutiveChunker(nltk.ChunkParserI):
 class ConsecutiveTagger(nltk.TaggerI):
 
     def __init__(self, train_data):
-        train_set = []
+        self.__train_set = []
         for tagged_sentence in train_data:
             sentence = nltk.tag.untag(tagged_sentence)
             history = []
             for i, (word, tag) in enumerate(tagged_sentence):
                 features = self.__get_features(sentence, i)
-                train_set.append((features, tag))
+                self.__train_set.append((features, tag))
                 history.append(tag)
-        self.classifier = nltk.NaiveBayesClassifier.train(train_set)
+        self.classifier = nltk.NaiveBayesClassifier.train(self.__train_set)
 
 
     def tag(self, sentence):
@@ -135,13 +155,6 @@ def get_data_set():
     train = nltk.corpus.conll2000.chunked_sents('train.txt', chunk_types=['NP'])
     test = nltk.corpus.conll2000.chunked_sents('test.txt', chunk_types=['NP'])
     return train, test
-
-
-def preprocess_text(document):
-    sentences = nltk.sent_tokenize(document)
-    sentences = [nltk.word_tokenize(sentence) for sentence in sentences]
-    sentences = [nltk.pos_tag(sentence) for sentence in sentences]
-    return sentences
 
 
 def download_resources():
