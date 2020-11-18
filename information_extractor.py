@@ -147,10 +147,6 @@ class EntityRecognizer():
         return self.parser(sentence)
 
 
-def main():
-    download_resources()
-
-
 def get_data_set():
     train = nltk.corpus.conll2000.chunked_sents('train.txt', chunk_types=['NP'])
     test = nltk.corpus.conll2000.chunked_sents('test.txt', chunk_types=['NP'])
@@ -164,4 +160,4 @@ def download_resources():
 
 
 if __name__ == '__main__':
-    main()
+    download_resources()
